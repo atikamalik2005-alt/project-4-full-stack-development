@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Student</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>✏️ Edit Student</h1>
+            <button onclick="window.location.href='index.html'" class="btn btn-secondary">
+                ← Back to List
+            </button>
+        </header>
+
+        <form id="studentForm" class="student-form">
+            <div class="form-group">
+                <label for="name">Full Name *</label>
+                <input type="text" id="name" name="name" required minlength="2" maxlength="50">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="age">Age *</label>
+                <input type="number" id="age" name="age" required min="5" max="100">
+            </div>
+
+            <div class="form-group">
+                <label for="grade">Grade *</label>
+                <select id="grade" name="grade" required>
+                    <option value="">Select Grade</option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                    <option value="F">F</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="course">Course *</label>
+                <input type="text" id="course" name="course" required>
+            </div>
+
+            <div class="form-group">
+                <label for="address">Address</label>
+                <textarea id="address" name="address" rows="3" maxlength="200"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" pattern="[0-9]{10}" placeholder="1234567890">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">💾 Update Student</button>
+                <button type="button" onclick="window.location.href='index.html'" class="btn btn-secondary">Cancel</button>
+            </div>
+        </form>
+
+        <div id="message" class="message"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api/students';
+        const urlParams = new URLSearchParams(window.location.search);
+        const studentId = urlParams.get('id');
+
+        if (!studentId) {
+            window.location.href = 'index.html';
+        }
+
+        // Load student data
+        async function loadStudent() {
+            try {
+                const response = await fetch(`${API_URL}/${studentId}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    const student = data.data;
+                    document.getElementById('name').value = student.name;
+                    document.getElementById('email').value = student.email;
+                    document.getElementById('age').value = student.age;
+                    document.getElementById('grade').value = student.grade;
+                    document.getElementById('course').value = student.course;
+                    document.getElementById('address').value = student.address || '';
+                    document.getElementById('phone').value = student.phone || '';
+                } else {
+                    showMessage(`❌ Error: ${data.message}`, 'error');
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000);
+                }
+            } catch (error) {
+                showMessage(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Update student
+        document.getElementById('studentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('name').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                age: parseInt(document.getElementById('age').value),
+                grade: document.getElementById('grade').value,
+                course: document.getElementById('course').value.trim(),
+                address: document.getElementById('address').value.trim(),
+                phone: document.getElementById('phone').value.trim()
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/${studentId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('✅ Student updated successfully!', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                } else {
+                    showMessage(`❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Error: ${error.message}`, 'error');
+            }
+        });
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+        }
+
+        loadStudent();
+    </script>
+</body>
+</html>
